@@ -1,0 +1,41 @@
+version: '2'
+services:
+
+    redis:
+      image: "redis:latest"
+
+    db:
+      build: ./db
+      environment:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: test_database
+        MYSQL_USER: user
+        MYSQL_PASSWORD: user
+        MYSQL_HOST: ""
+
+      mem_limit: 1000000000
+      volumes:
+        - ./db/sql:/docker-entrypoint-initdb.d
+      ports:
+        - "33333:3306"
+
+    base:
+      build: ./php7-nginx
+      volumes:
+        - ./deploy:/data/www
+        - /var/log
+
+    web:
+      build: ./database
+      depends_on:
+        - "base"
+      ports:
+        - "8080:80"
+        - "6379:6379"
+        - "3306:3306"
+      links:
+        - redis
+        - db
+      volumes:
+        - ../../docker_test_for_fuel:/data/www
+        - /var/log
